@@ -1,0 +1,7 @@
+{
+  "service1": {
+    "produces": {
+      "entity1.json": null
+    }
+  }
+}

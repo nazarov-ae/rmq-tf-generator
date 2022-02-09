@@ -1,0 +1,18 @@
+{
+  "service1": {
+    "produces": {
+      "entity1.json": null
+    }
+  },
+  "service2": {
+    "produces": {
+      "entity2.json": null
+    }
+  },
+  "service3": {
+    "consumes": {
+      "entity1.json": null,
+      "entity2.json": null
+    }
+  }
+}

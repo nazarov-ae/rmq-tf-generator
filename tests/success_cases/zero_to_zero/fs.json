@@ -1,0 +1,10 @@
+{
+  "service1": {
+    "produces": {
+    }
+  },
+  "service2": {
+    "consumes": {
+    }
+  }
+}
