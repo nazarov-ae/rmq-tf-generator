@@ -53,7 +53,7 @@ resource "rabbitmq_queue" "service1_entity3" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
@@ -62,7 +62,7 @@ resource "rabbitmq_queue" "service2_entity1" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
@@ -71,7 +71,7 @@ resource "rabbitmq_queue" "service3_entity2" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
@@ -81,7 +81,7 @@ resource "rabbitmq_queue" "service1_backfill_entity3" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
@@ -90,7 +90,7 @@ resource "rabbitmq_queue" "service2_backfill_entity1" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
@@ -99,7 +99,7 @@ resource "rabbitmq_queue" "service3_backfill_entity2" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
