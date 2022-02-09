@@ -34,7 +34,7 @@ resource "rabbitmq_queue" "service2_entity1" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service3_entity1" {
@@ -43,7 +43,7 @@ resource "rabbitmq_queue" "service3_entity1" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 
@@ -53,7 +53,7 @@ resource "rabbitmq_queue" "service2_backfill_entity1" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service3_backfill_entity1" {
@@ -62,7 +62,7 @@ resource "rabbitmq_queue" "service3_backfill_entity1" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 

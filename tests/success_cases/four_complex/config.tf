@@ -64,7 +64,7 @@ resource "rabbitmq_queue" "service1_entity3" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service1_entity4" {
@@ -73,7 +73,7 @@ resource "rabbitmq_queue" "service1_entity4" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service2_entity2" {
@@ -82,7 +82,7 @@ resource "rabbitmq_queue" "service2_entity2" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service4_entity1" {
@@ -91,7 +91,7 @@ resource "rabbitmq_queue" "service4_entity1" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 
@@ -101,7 +101,7 @@ resource "rabbitmq_queue" "service1_backfill_entity3" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service1_backfill_entity4" {
@@ -110,7 +110,7 @@ resource "rabbitmq_queue" "service1_backfill_entity4" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service2_backfill_entity2" {
@@ -119,7 +119,7 @@ resource "rabbitmq_queue" "service2_backfill_entity2" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 resource "rabbitmq_queue" "service4_backfill_entity1" {
@@ -128,7 +128,7 @@ resource "rabbitmq_queue" "service4_backfill_entity1" {
 
   settings {
     durable     = true
-    auto_delete = true
+    auto_delete = false
   }
 }
 
