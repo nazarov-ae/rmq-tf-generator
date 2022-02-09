@@ -1,0 +1,5 @@
+test-warnings: true
+strictness: veryhigh
+
+ignore-paths:
+  - venv

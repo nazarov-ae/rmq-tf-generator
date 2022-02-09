@@ -1,0 +1,9 @@
+argparse
+jinja2
+
+# test
+prospector
+pytest
+pytest-cov
+attrs
+pyfakefs

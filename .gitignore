@@ -1,0 +1,11 @@
+.idea
+__pycache__
+.coverage
+.venv
+.cache
+.env
+.pytest_cache
+.benchmarks
+*.py[cod]
+*.log
+.python-version

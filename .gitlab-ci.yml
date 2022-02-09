@@ -1,0 +1,25 @@
+image: eu.gcr.io/pik-infrastructure/python-base:v1.12
+
+stages:
+  - test
+
+
+test:
+  stage: test
+  cache:
+    key:
+      files:
+        - requirements.txt
+    paths:
+      - .venv
+      - .cache/pip
+  before_script:
+    - python3 -m pip install virtualenv
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - python3 -m pip install -U pip
+    - python3 -m pip install -r requirements.txt
+  script:
+    - prospector --profile-path . --profile .prospector.yaml --output-format emacs --output-format json:codequality.json .
+    - pytest --cov-report term-missing --cov .
+  when: always
