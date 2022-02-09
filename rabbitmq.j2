@@ -36,7 +36,7 @@ resource "rabbitmq_queue" "{{ service }}_{{ consumer }}" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
@@ -48,7 +48,7 @@ resource "rabbitmq_queue" "{{ service }}_backfill_{{ consumer }}" {
   vhost = "/"
 
   settings {
-    durable     = false
+    durable     = true
     auto_delete = true
   }
 }
