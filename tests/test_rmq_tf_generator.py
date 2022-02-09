@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from terraform.rmq_tf_generator import (
+from rmq_tf_generator import (
     ConfigBuilder, MultipleProducerError, ProducerMissingError, LoopbackError)
 
 
