@@ -2,7 +2,7 @@
   "service1": {
     "produces": {
       "entity1.json": null
-    }
+    },
   },
   "service2": {
     "consumes": {

@@ -1,6 +1,6 @@
 import os
 from os.path import (
-    splitext, join, isdir, exists, dirname, abspath)
+    splitext, join, isdir, isfile, exists, dirname, abspath)
 import re
 import argparse
 
@@ -15,14 +15,10 @@ class ProducerMissingError(Exception):
     pass
 
 
-class LoopbackError(Exception):
-    pass
-
-
 class ConfigBuilder:  # noqa: too-few-public-methods
     BASE_DIR = dirname(abspath(__file__))
     ENTITIES_TEMPLATE = r'.*\.json'
-    RABBITMQ_TEMPLATE = 'rabbitmq.j2'
+    RABBITMQ_TEMPLATE = 'rabbitmq.j2tf'
 
     def __init__(self, services_dir):
         self.services_dir = services_dir
@@ -30,27 +26,82 @@ class ConfigBuilder:  # noqa: too-few-public-methods
         self.consumes = []
 
     def _collect_data(self):
+        '''
+        s1
+        |- produces
+           |- e1
+           |- e2
+        s2
+        |- consumes
+           |- e1
+           |- e2
+
+        # 'produces': [
+        #   ('e1', 's1')
+        # ]
+        # 'consumes': [
+        #   ('e1', 's2')
+        # ]
+        'produces': ['e1', 's1']
+        'consumes': {
+          's2.e1': ['e1'],
+          's2.e2': ['e2']
+        }
+
+        exchange    [P][e]                  e1
+        exchange    [P][e]                  e2
+        queue       [P][key]                s2.e1
+        queue       [P][key]                s2.e2
+        binding     [P][value]>[P][value]   e1>s2.e1
+        binding     [P][value]>[P][value]   e2>s2.e2
+
+
+        s1
+        |- produces
+           |- e1
+           |- e2
+        s2
+        |- consumes
+           |- d
+              |- e1
+              |- e2
+
+        # 'produces': [
+        #   ('e1', 's1')
+        #   ('e2', 's1')
+        # ]
+        # 'consumes': [
+        #     ('e1', 's2.d'),
+        #     ('e2', 's2.d'),
+        # ]
+        'produces': ['e1', 's1']
+        'consumes': {
+          's2.d': ['e1', 'e2'],
+        }
+
+        exchange    [e]                     e1
+        exchange    [e]                     e2
+        queue       [P][key]                s2.2
+        binding     [P][value]>[P][value]   e1>s2.d
+        binding     [P][value]>[P][value]   e2>s2.d
+
+        '''
         for service_dir in os.listdir(self.services_dir):
             if not isdir(join(self.services_dir, service_dir)):
                 continue
             rmq_entities = {
-                'produces': [],
-                'consumes': [],
+                'produces': self.produces,
+                'consumes': self.consumes,
             }
             for rmq_entity, entities in rmq_entities.items():
                 dir_path = join(self.services_dir, service_dir, rmq_entity)
                 if not exists(dir_path) or not isdir(dir_path):
                     continue
                 for file in os.listdir(dir_path):
-                    if isdir(file):
+                    if not isfile(join(dir_path, file)):
                         continue
                     if re.match(self.ENTITIES_TEMPLATE, file):
                         entities.append([splitext(file)[0], service_dir])
-            for producer in rmq_entities['produces']:
-                if producer in rmq_entities['consumes']:
-                    raise LoopbackError(service_dir)
-            self.produces += rmq_entities['produces']
-            self.consumes += rmq_entities['consumes']
 
     def _validate_data(self):
         produces = []
@@ -76,7 +127,7 @@ class ConfigBuilder:  # noqa: too-few-public-methods
             'consumes': self.consumes,
         })
 
-    def build_config(self):
+    def build(self):
         self._collect_data()
         self._validate_data()
         return self._render()
@@ -88,7 +139,7 @@ def main():
                         help='Path to directory with services')
     args = parser.parse_args()
 
-    config = ConfigBuilder(args.services_dir).build_config()
+    config = ConfigBuilder(args.services_dir).build()
     print(config)
 
 

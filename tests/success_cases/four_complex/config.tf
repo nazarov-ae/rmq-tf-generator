@@ -95,8 +95,8 @@ resource "rabbitmq_queue" "service4_entity1" {
   }
 }
 
-resource "rabbitmq_queue" "service1_backfill_entity3" {
-  name  = "service1.backfill.entity3"
+resource "rabbitmq_queue" "service1_entity3_backfill" {
+  name  = "service1.entity3.backfill"
   vhost = "/"
 
   settings {
@@ -104,8 +104,8 @@ resource "rabbitmq_queue" "service1_backfill_entity3" {
     auto_delete = false
   }
 }
-resource "rabbitmq_queue" "service1_backfill_entity4" {
-  name  = "service1.backfill.entity4"
+resource "rabbitmq_queue" "service1_entity4_backfill" {
+  name  = "service1.entity4.backfill"
   vhost = "/"
 
   settings {
@@ -113,8 +113,8 @@ resource "rabbitmq_queue" "service1_backfill_entity4" {
     auto_delete = false
   }
 }
-resource "rabbitmq_queue" "service2_backfill_entity2" {
-  name  = "service2.backfill.entity2"
+resource "rabbitmq_queue" "service2_entity2_backfill" {
+  name  = "service2.entity2.backfill"
   vhost = "/"
 
   settings {
@@ -122,8 +122,8 @@ resource "rabbitmq_queue" "service2_backfill_entity2" {
     auto_delete = false
   }
 }
-resource "rabbitmq_queue" "service4_backfill_entity1" {
-  name  = "service4.backfill.entity1"
+resource "rabbitmq_queue" "service4_entity1_backfill" {
+  name  = "service4.entity1.backfill"
   vhost = "/"
 
   settings {

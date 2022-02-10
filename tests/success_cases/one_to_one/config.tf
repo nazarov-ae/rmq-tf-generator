@@ -38,8 +38,8 @@ resource "rabbitmq_queue" "service2_entity1" {
   }
 }
 
-resource "rabbitmq_queue" "service2_backfill_entity1" {
-  name  = "service2.backfill.entity1"
+resource "rabbitmq_queue" "service2_entity1_backfill" {
+  name  = "service2.entity1.backfill"
   vhost = "/"
 
   settings {

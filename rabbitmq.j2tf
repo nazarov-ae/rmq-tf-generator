@@ -17,9 +17,9 @@ provider "rabbitmq" {
   password = var.password
 }
 
-{% for producer, service in produces %}
-resource "rabbitmq_exchange" "{{ producer }}" {
-  name  = "{{ producer }}"
+{% for exchange, service in produces %}
+resource "rabbitmq_exchange" "{{ exchange }}" {
+  name  = "{{ exchange }}"
   vhost = "/"
 
   settings {
@@ -30,9 +30,9 @@ resource "rabbitmq_exchange" "{{ producer }}" {
 }
 {% endfor %}
 
-{% for consumer, service in consumes %}
-resource "rabbitmq_queue" "{{ service }}_{{ consumer }}" {
-  name  = "{{ service }}.{{ consumer }}"
+{% for queue, service in consumes %}
+resource "rabbitmq_queue" "{{ service }}_{{ queue }}" {
+  name  = "{{ service }}.{{ queue }}"
   vhost = "/"
 
   settings {
@@ -42,9 +42,9 @@ resource "rabbitmq_queue" "{{ service }}_{{ consumer }}" {
 }
 {% endfor %}
 
-{% for consumer, service in consumes %}
-resource "rabbitmq_queue" "{{ service }}_backfill_{{ consumer }}" {
-  name  = "{{ service }}.backfill.{{ consumer }}"
+{% for queue, service in consumes %}
+resource "rabbitmq_queue" "{{ service }}_{{ queue }}_backfill" {
+  name  = "{{ service }}.{{ queue }}.backfill"
   vhost = "/"
 
   settings {
@@ -54,11 +54,11 @@ resource "rabbitmq_queue" "{{ service }}_backfill_{{ consumer }}" {
 }
 {% endfor %}
 
-{% for consumer, service in consumes %}
-resource "rabbitmq_binding" "{{ service }}_{{ consumer }}_from_{{ consumer }}" {
-  source           = rabbitmq_exchange.{{ consumer }}.name
+{% for queue, service in consumes %}
+resource "rabbitmq_binding" "{{ service }}_{{ queue }}_from_{{ queue }}" {
+  source           = rabbitmq_exchange.{{ queue }}.name
   vhost            = "/"
-  destination      = rabbitmq_queue.{{ service }}_{{ consumer }}.name
+  destination      = rabbitmq_queue.{{ service }}_{{ queue }}.name
   destination_type = "queue"
   routing_key      = ""
 }

@@ -47,8 +47,8 @@ resource "rabbitmq_queue" "service3_entity1" {
   }
 }
 
-resource "rabbitmq_queue" "service2_backfill_entity1" {
-  name  = "service2.backfill.entity1"
+resource "rabbitmq_queue" "service2_entity1_backfill" {
+  name  = "service2.entity1.backfill"
   vhost = "/"
 
   settings {
@@ -56,8 +56,8 @@ resource "rabbitmq_queue" "service2_backfill_entity1" {
     auto_delete = false
   }
 }
-resource "rabbitmq_queue" "service3_backfill_entity1" {
-  name  = "service3.backfill.entity1"
+resource "rabbitmq_queue" "service3_entity1_backfill" {
+  name  = "service3.entity1.backfill"
   vhost = "/"
 
   settings {
