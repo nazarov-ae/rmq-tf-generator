@@ -4,7 +4,7 @@ import json
 import pytest
 
 from rmq_tf_generator import (
-    ConfigBuilder, MultipleProducerError, ProducerMissingError, LoopbackError)
+    ConfigBuilder, MultipleProducerError, ProducerMissingError)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -54,68 +54,107 @@ def test_build_config(case_dir, fs_plus):  # noqa: redefined-outer-name
         excepted_config = file.read()
 
     create_fake_fs(file_struct)
-    actual_config = ConfigBuilder(SERVICES_DIR).build_config()
+    actual_config = ConfigBuilder(SERVICES_DIR).build()
 
     assert actual_config == excepted_config
 
 
-def test_multiple_producer_error(fs_plus):  # noqa: redefined-outer-name
-    create_fake_fs({
-        'service1': {
-            'produces': {
-                'entity1.json': None,
+@pytest.mark.parametrize('fs_struct, exception_match', [
+    (
+        {
+            'service1': {
+                'produces': {
+                    'entity1.json': None,
+                },
+            },
+            'service2': {
+                'produces': {
+                    'entity1.json': None,
+                },
             },
         },
-        'service2': {
-            'produces': {
-                'entity1.json': None,
+        ['entity1']
+    ),
+    (
+        {
+            'service1': {
+                'produces': {
+                    'entity1.json': None,
+                },
+            },
+            'service2': {
+                'produces': {
+                    'entity1.json': None,
+                },
+            },
+            'service3': {
+                'produces': {
+                    'entity2.json': None,
+                },
+            },
+            'service4': {
+                'produces': {
+                    'entity2.json': None,
+                },
             },
         },
-    })
-
-    with pytest.raises(MultipleProducerError):
-        ConfigBuilder(SERVICES_DIR).build_config()
-
-
-@pytest.mark.parametrize('fs_struct', [
-    {
-        'service1': {
-            'consumes': {
-                'entity1.json': None,
-            },
-        },
-    },
-    {
-        'service1': {
-            'produces': {
-                'entity1.json': None,
-            },
-        },
-        'service2': {
-            'consumes': {
-                'entity2.json': None,
-            },
-        },
-    },
+        ['entity1', 'entity2']
+    )
 ])
-def test_producer_missing_error(fs_struct, fs_plus):  # noqa: redefined-outer-name
+def test_multiple_producer_error(fs_plus, fs_struct, exception_match):  # noqa: redefined-outer-name
     create_fake_fs(fs_struct)
 
-    with pytest.raises(ProducerMissingError):
-        ConfigBuilder(SERVICES_DIR).build_config()
+    with pytest.raises(MultipleProducerError, match=str(exception_match)):
+        ConfigBuilder(SERVICES_DIR).build()
 
 
-def test_loopback_error(fs_plus):  # noqa: redefined-outer-name
-    create_fake_fs({
-        'service1': {
-            'produces': {
-                'entity1.json': None,
+@pytest.mark.parametrize('fs_struct, exception_match', [
+    (
+        {
+            'service1': {
+                'consumes': {
+                    'entity1.json': None,
+                },
             },
-            'consumes': {
-                'entity1.json': None,
+        },
+        ['entity1']
+    ),
+    (
+        {
+            'service1': {
+                'produces': {
+                    'entity1.json': None,
+                },
             },
-        }
-    })
+            'service2': {
+                'consumes': {
+                    'entity2.json': None,
+                },
+            },
+        },
+        ['entity1']
+    ),
+    (
+        {
+            "service1": {
+                "produces": {
+                    "entity1.json": None
+                }
+            },
+            "service2": {
+                "consumes": {
+                    "queue": {
+                        "entity1.json": None,
+                        "entity2.json": None
+                    }
+                }
+            }
+        },
+        ['entity2']
+    )
+])
+def test_producer_missing_error(fs_struct, fs_plus, exception_match):  # noqa: redefined-outer-name
+    create_fake_fs(fs_struct)
 
-    with pytest.raises(LoopbackError):
-        ConfigBuilder(SERVICES_DIR).build_config()
+    with pytest.raises(ProducerMissingError, match=str(exception_match)):
+        ConfigBuilder(SERVICES_DIR).build()

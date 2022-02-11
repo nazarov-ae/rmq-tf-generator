@@ -57,8 +57,8 @@ resource "rabbitmq_queue" "service4_entity2" {
   }
 }
 
-resource "rabbitmq_queue" "service2_backfill_entity1" {
-  name  = "service2.backfill.entity1"
+resource "rabbitmq_queue" "service2_entity1_backfill" {
+  name  = "service2.entity1.backfill"
   vhost = "/"
 
   settings {
@@ -66,8 +66,8 @@ resource "rabbitmq_queue" "service2_backfill_entity1" {
     auto_delete = false
   }
 }
-resource "rabbitmq_queue" "service4_backfill_entity2" {
-  name  = "service4.backfill.entity2"
+resource "rabbitmq_queue" "service4_entity2_backfill" {
+  name  = "service4.entity2.backfill"
   vhost = "/"
 
   settings {
@@ -76,14 +76,14 @@ resource "rabbitmq_queue" "service4_backfill_entity2" {
   }
 }
 
-resource "rabbitmq_binding" "service2_entity1_from_entity1" {
+resource "rabbitmq_binding" "service2_entity1" {
   source           = rabbitmq_exchange.entity1.name
   vhost            = "/"
   destination      = rabbitmq_queue.service2_entity1.name
   destination_type = "queue"
   routing_key      = ""
 }
-resource "rabbitmq_binding" "service4_entity2_from_entity2" {
+resource "rabbitmq_binding" "service4_entity2" {
   source           = rabbitmq_exchange.entity2.name
   vhost            = "/"
   destination      = rabbitmq_queue.service4_entity2.name

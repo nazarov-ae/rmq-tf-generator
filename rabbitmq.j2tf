@@ -17,9 +17,9 @@ provider "rabbitmq" {
   password = var.password
 }
 
-{% for producer, service in produces %}
-resource "rabbitmq_exchange" "{{ producer }}" {
-  name  = "{{ producer }}"
+{% for produce in produces %}
+resource "rabbitmq_exchange" "{{ produce }}" {
+  name  = "{{ produce }}"
   vhost = "/"
 
   settings {
@@ -30,9 +30,9 @@ resource "rabbitmq_exchange" "{{ producer }}" {
 }
 {% endfor %}
 
-{% for consumer, service in consumes %}
-resource "rabbitmq_queue" "{{ service }}_{{ consumer }}" {
-  name  = "{{ service }}.{{ consumer }}"
+{% for queue in consumes.keys() %}
+resource "rabbitmq_queue" "{{ queue | fix_resource_name }}" {
+  name  = "{{ queue }}"
   vhost = "/"
 
   settings {
@@ -42,9 +42,9 @@ resource "rabbitmq_queue" "{{ service }}_{{ consumer }}" {
 }
 {% endfor %}
 
-{% for consumer, service in consumes %}
-resource "rabbitmq_queue" "{{ service }}_backfill_{{ consumer }}" {
-  name  = "{{ service }}.backfill.{{ consumer }}"
+{% for queue in consumes.keys() %}
+resource "rabbitmq_queue" "{{ queue | fix_resource_name }}_backfill" {
+  name  = "{{ queue }}.backfill"
   vhost = "/"
 
   settings {
@@ -54,12 +54,14 @@ resource "rabbitmq_queue" "{{ service }}_backfill_{{ consumer }}" {
 }
 {% endfor %}
 
-{% for consumer, service in consumes %}
-resource "rabbitmq_binding" "{{ service }}_{{ consumer }}_from_{{ consumer }}" {
-  source           = rabbitmq_exchange.{{ consumer }}.name
+{% for queue, entities in consumes.items() %}
+{% for entity in entities %}
+resource "rabbitmq_binding" "{{ queue | fix_resource_name }}" {
+  source           = rabbitmq_exchange.{{ entity | fix_resource_name }}.name
   vhost            = "/"
-  destination      = rabbitmq_queue.{{ service }}_{{ consumer }}.name
+  destination      = rabbitmq_queue.{{ queue | fix_resource_name }}.name
   destination_type = "queue"
   routing_key      = ""
 }
+{% endfor %}
 {% endfor %}
