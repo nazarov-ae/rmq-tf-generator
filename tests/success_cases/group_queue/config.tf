@@ -27,9 +27,19 @@ resource "rabbitmq_exchange" "entity1" {
     auto_delete = false
   }
 }
+resource "rabbitmq_exchange" "entity2" {
+  name  = "entity2"
+  vhost = "/"
 
-resource "rabbitmq_queue" "service2_entity1" {
-  name  = "service2.entity1"
+  settings {
+    type        = "fanout"
+    durable     = true
+    auto_delete = false
+  }
+}
+
+resource "rabbitmq_queue" "service3_queue" {
+  name  = "service3.queue"
   vhost = "/"
 
   settings {
@@ -38,8 +48,8 @@ resource "rabbitmq_queue" "service2_entity1" {
   }
 }
 
-resource "rabbitmq_queue" "service2_entity1_backfill" {
-  name  = "service2.entity1.backfill"
+resource "rabbitmq_queue" "service3_queue_backfill" {
+  name  = "service3.queue.backfill"
   vhost = "/"
 
   settings {
@@ -48,10 +58,17 @@ resource "rabbitmq_queue" "service2_entity1_backfill" {
   }
 }
 
-resource "rabbitmq_binding" "service2_entity1" {
+resource "rabbitmq_binding" "service3_queue" {
   source           = rabbitmq_exchange.entity1.name
   vhost            = "/"
-  destination      = rabbitmq_queue.service2_entity1.name
+  destination      = rabbitmq_queue.service3_queue.name
+  destination_type = "queue"
+  routing_key      = ""
+}
+resource "rabbitmq_binding" "service3_queue" {
+  source           = rabbitmq_exchange.entity2.name
+  vhost            = "/"
+  destination      = rabbitmq_queue.service3_queue.name
   destination_type = "queue"
   routing_key      = ""
 }

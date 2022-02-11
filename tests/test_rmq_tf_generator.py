@@ -40,9 +40,9 @@ def create_fake_fs(file_struct):
 
 
 def get_success_cases_dirs():
-    # for case_dir in os.listdir(SUCCESS_CASES_DIR):
-    #     yield case_dir
-    yield 'one_to_one'
+    for case_dir in os.listdir(SUCCESS_CASES_DIR):
+        yield case_dir
+    # yield 'group_queue'
 
 
 @pytest.mark.parametrize('case_dir', get_success_cases_dirs())
@@ -98,6 +98,22 @@ def test_multiple_producer_error(fs_plus):  # noqa: redefined-outer-name
             },
         },
     },
+    {
+        "service1": {
+            "produces": {
+                "entity1.json": None
+            }
+        },
+        "service2": {
+            "consumes": {
+                "queue": {
+                    "entity1.json": None,
+                    "entity2.json": None
+                }
+            }
+        }
+    }
+
 ])
 def test_producer_missing_error(fs_struct, fs_plus):  # noqa: redefined-outer-name
     create_fake_fs(fs_struct)

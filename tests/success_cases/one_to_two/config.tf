@@ -66,14 +66,14 @@ resource "rabbitmq_queue" "service3_entity1_backfill" {
   }
 }
 
-resource "rabbitmq_binding" "service2_entity1_from_entity1" {
+resource "rabbitmq_binding" "service2_entity1" {
   source           = rabbitmq_exchange.entity1.name
   vhost            = "/"
   destination      = rabbitmq_queue.service2_entity1.name
   destination_type = "queue"
   routing_key      = ""
 }
-resource "rabbitmq_binding" "service3_entity1_from_entity1" {
+resource "rabbitmq_binding" "service3_entity1" {
   source           = rabbitmq_exchange.entity1.name
   vhost            = "/"
   destination      = rabbitmq_queue.service3_entity1.name
