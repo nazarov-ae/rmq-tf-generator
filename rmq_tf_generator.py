@@ -15,10 +15,6 @@ class ProducerMissingError(Exception):
     pass
 
 
-class MultipleGroupConsumersError(Exception):
-    pass
-
-
 class ConfigBuilder:  # noqa: too-few-public-methods
     BASE_DIR = dirname(abspath(__file__))
     ENTITIES_TEMPLATE = r'.*\.json'
@@ -36,51 +32,67 @@ class ConfigBuilder:  # noqa: too-few-public-methods
             if re.match(self.ENTITIES_TEMPLATE, entity):
                 self.produces.append(splitext(entity)[0])
 
-    def _collect_group_consumes(self, service, group_consumes_dir):
+    def _collect_group_consumes(self, service, entity_dir):
         entities = [
             splitext(entity)[0]
-            for entity in os.listdir(group_consumes_dir)
-            if isfile(join(group_consumes_dir, entity)) and
+            for entity in os.listdir(entity_dir)
+            if isfile(join(entity_dir, entity)) and
             re.match(self.ENTITIES_TEMPLATE, entity)
         ]
-        group_consumes = split(group_consumes_dir)[1]
-        if group_consumes in self.consumes:
-            raise MultipleGroupConsumersError(group_consumes)
-        self.consumes[f'{service}.{group_consumes}'] = entities
+        self.consumes[f'{service}.{split(entity_dir)[1]}'] = entities
+
+    def _collect_entity_consumes(self, service, entity):
+        if re.match(self.ENTITIES_TEMPLATE, entity):
+            entity = splitext(entity)[0]
+            self.consumes[f'{service}.{entity}'] = [entity]
 
     def _collect_consumes(self, service, consume_dir):
         for entity in os.listdir(consume_dir):
             entity_dir = join(consume_dir, entity)
             if isdir(entity_dir):
                 self._collect_group_consumes(service, entity_dir)
-                continue
-            if re.match(self.ENTITIES_TEMPLATE, entity):
-                entity = splitext(entity)[0]
-                self.consumes[f'{service}.{entity}'] = [entity]
+            if isfile(entity_dir):
+                self._collect_entity_consumes(service, entity)
 
     def _collect_data(self):
-        '''
-        s1
+        """
+        Пример с плоскими очередями
+        service1
         |- produces
-           |- e1
-           |- e2
-        s2
+           |- entity1
+        service2
         |- consumes
-           |- d
-              |- e1
-              |- e2
+           |- entity1
 
-        'produces': ['e1', 's1']
+        'produces': ['e1']
         'consumes': {
-          's2.d': ['e1', 'e2'],
+          's2.e1': ['e1'],
         }
 
-        exchange    [P]                     e1
-        exchange    [P]                     e2
-        queue       [C][key]                s2.2
-        binding     [C][value]>[C][value]   e1>s2.d
-        binding     [C][value]>[C][value]   e2>s2.d
-        '''
+        exchanges: entity1
+        queues:    service2.entity1
+        bindings:  entity1>service2.entity1
+
+        Пример с групповыми очередями
+        service1
+        |- produces
+           |- entity1
+           |- entity2
+        service2
+        |- consumes
+           |- group
+              |- entity1
+              |- entity2
+
+        'produces': ['entity1', 'entity2']
+        'consumes': {
+          'service2.group': ['entity1', 'entity2'],
+        }
+
+        exchanges: entity1, entity2
+        queues:    service2.group
+        bindings:  entity1>service2.group, entity2>service2.group
+        """
 
         for service in os.listdir(self.services_dir):
             service_dir = join(self.services_dir, service)
@@ -96,15 +108,22 @@ class ConfigBuilder:  # noqa: too-few-public-methods
                     self._collect_consumes(service, rmq_entity_dir)
 
     def _validate_data(self):
-        if len(self.produces) != len(set(self.produces)):
-            raise MultipleProducerError()
+        produces = []
+        error_produces = []
+        for producer in self.produces:
+            if producer in produces:
+                error_produces.append(producer)
+            produces.append(producer)
+        if error_produces:
+            raise MultipleProducerError(error_produces)
 
-        consumes = []
+        error_consumes = []
         for entities in self.consumes.values():
             for entity in entities:
                 if entity not in self.produces:
-                    raise ProducerMissingError(entity)
-                consumes.append(entity)
+                    error_consumes.append(entity)
+        if error_consumes:
+            raise ProducerMissingError(error_consumes)
 
     def _render(self):
         env = jinja2.Environment(
