@@ -1,6 +1,7 @@
-{% for produce in produces %}
-resource "rabbitmq_exchange" "{{ produce }}" {
-  name  = "{{ produce }}"
+{% for exchanges in produces.values() %}
+{% for exchange in exchanges %}
+resource "rabbitmq_exchange" "{{ exchange }}" {
+  name  = "{{ exchange }}"
   vhost = "/"
 
   settings {
@@ -9,6 +10,7 @@ resource "rabbitmq_exchange" "{{ produce }}" {
     auto_delete = false
   }
 }
+{% endfor %}
 {% endfor %}
 
 {% for queue in consumes.keys() %}
@@ -35,14 +37,41 @@ resource "rabbitmq_queue" "{{ queue | fix_resource_name }}_backfill" {
 }
 {% endfor %}
 
-{% for queue, entities in consumes.items() %}
-{% for entity in entities %}
+{% for queue, exchanges in consumes.items() %}
+{% for exchange in exchanges %}
 resource "rabbitmq_binding" "{{ queue | fix_resource_name }}" {
-  source           = rabbitmq_exchange.{{ entity | fix_resource_name }}.name
+  source           = rabbitmq_exchange.{{ exchange | fix_resource_name }}.name
   vhost            = "/"
   destination      = rabbitmq_queue.{{ queue | fix_resource_name }}.name
   destination_type = "queue"
   routing_key      = ""
 }
 {% endfor %}
+{% endfor %}
+
+{% for service in produces.keys() %}
+resource "rabbitmq_user" "{{ service }}" {
+  name     = "{{ service }}"
+  password = ""
+}
+{% endfor %}
+
+{% for service, exchanges in produces.items() %}
+resource "rabbitmq_permissions" "{{ service }}" {
+  user  = rabbitmq_user.{{ service }}.name
+  vhost = "/"
+
+  permissions {
+    configure = ""
+    write    = "({% for exchange in exchanges %}{{ exchange }}|{% endfor %})"
+    read     = ""
+  }
+}
+{% endfor %}
+
+{% for service in consumes.keys() %}
+resource "rabbitmq_user" "{{ service }}" {
+  name     = "{{ service }}"
+  password = ""
+}
 {% endfor %}
