@@ -152,7 +152,7 @@ class ConfigBuilder:  # noqa: too-few-public-methods
 
     def _validate_consumes(self):
         error_consumes = []
-        for rmq_entity in self.services.values():
+        for rmq_entity in self.services.values():  # noqa: too-many-nested-blocks
             for consumer in rmq_entity['consumes']:
                 if isinstance(consumer, dict):
                     for sub_consumes in consumer.values():
