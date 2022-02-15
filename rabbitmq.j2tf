@@ -126,13 +126,13 @@ resource "rabbitmq_permissions" "{{ service }}" {
         {%- for queue in rmq_entities.consumes -%}
             {%- if queue is mapping -%}
                 {%- for queue_group in queue.keys() -%}
-                    {{ service }}\.{{ queue_group }}|{{ service }}\.{{ queue_group }}\.backfill
+                    {{ service }}\\.{{ queue_group }}|{{ service }}\\.{{ queue_group }}\\.backfill
                     {%- if not loop.last %}
                         |
                     {%- endif -%}
                 {%- endfor -%}
             {%- else -%}
-                {{ service }}\.{{ queue }}|{{ service }}\.{{ queue }}\.backfill
+                {{ service }}\\.{{ queue }}|{{ service }}\\.{{ queue }}\\.backfill
             {%- endif -%}
             {%- if not loop.last -%}
                 |
