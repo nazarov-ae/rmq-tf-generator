@@ -63,6 +63,6 @@ resource "rabbitmq_permissions" "service2" {
   permissions {
     configure = ""
     write    = ""
-    read     = "(service2\.entity1|service2\.entity1\.backfill)"
+    read     = "(service2\\.entity1|service2\\.entity1\\.backfill)"
   }
 }
