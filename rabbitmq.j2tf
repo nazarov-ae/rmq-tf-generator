@@ -1,5 +1,5 @@
-{% for exchanges in produces.values() %}
-{% for exchange in exchanges %}
+{% for service in services.values() %}
+{% for exchange in service.produces %}
 resource "rabbitmq_exchange" "{{ exchange }}" {
   name  = "{{ exchange }}"
   vhost = "/"
@@ -13,9 +13,12 @@ resource "rabbitmq_exchange" "{{ exchange }}" {
 {% endfor %}
 {% endfor %}
 
-{% for queue in consumes.keys() %}
-resource "rabbitmq_queue" "{{ queue | fix_resource_name }}" {
-  name  = "{{ queue }}"
+{% for service, rmq_entities in services.items() %}
+{% for queue in rmq_entities.consumes %}
+{% if queue is mapping %}
+{% for queue_group in queue.keys() %}
+resource "rabbitmq_queue" "{{ service }}_{{ queue_group }}" {
+  name  = "{{ service }}.{{ queue_group }}"
   vhost = "/"
 
   settings {
@@ -24,10 +27,26 @@ resource "rabbitmq_queue" "{{ queue | fix_resource_name }}" {
   }
 }
 {% endfor %}
+{% else %}
+resource "rabbitmq_queue" "{{ service }}_{{ queue }}" {
+  name  = "{{ service }}.{{ queue }}"
+  vhost = "/"
 
-{% for queue in consumes.keys() %}
-resource "rabbitmq_queue" "{{ queue | fix_resource_name }}_backfill" {
-  name  = "{{ queue }}.backfill"
+  settings {
+    durable     = true
+    auto_delete = false
+  }
+}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% for service, rmq_entities in services.items() %}
+{% for queue in rmq_entities.consumes %}
+{% if queue is mapping %}
+{% for queue_group in queue.keys() %}
+resource "rabbitmq_queue" "{{ service }}_{{ queue_group }}_backfill" {
+  name  = "{{ service }}.{{ queue_group }}.backfill"
   vhost = "/"
 
   settings {
@@ -36,42 +55,91 @@ resource "rabbitmq_queue" "{{ queue | fix_resource_name }}_backfill" {
   }
 }
 {% endfor %}
+{% else %}
+resource "rabbitmq_queue" "{{ service }}_{{ queue }}_backfill" {
+  name  = "{{ service }}.{{ queue }}.backfill"
+  vhost = "/"
 
-{% for queue, exchanges in consumes.items() %}
-{% for exchange in exchanges %}
-resource "rabbitmq_binding" "{{ queue | fix_resource_name }}" {
-  source           = rabbitmq_exchange.{{ exchange | fix_resource_name }}.name
+  settings {
+    durable     = true
+    auto_delete = false
+  }
+}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% for service, rmq_entities in services.items() %}
+{% for queue in rmq_entities.consumes %}
+{% if queue is mapping %}
+{% for queue_group, queues in queue.items() %}
+{% for queue in queues %}
+resource "rabbitmq_binding" "{{ service }}_{{ queue_group }}_{{ queue }}" {
+  source           = rabbitmq_exchange.{{ queue }}.name
   vhost            = "/"
-  destination      = rabbitmq_queue.{{ queue | fix_resource_name }}.name
+  destination      = rabbitmq_queue.{{ service }}_{{ queue_group }}.name
   destination_type = "queue"
   routing_key      = ""
 }
 {% endfor %}
 {% endfor %}
+{% else %}
+resource "rabbitmq_binding" "{{ service }}_{{ queue }}" {
+  source           = rabbitmq_exchange.{{ queue }}.name
+  vhost            = "/"
+  destination      = rabbitmq_queue.{{ service }}_{{ queue }}.name
+  destination_type = "queue"
+  routing_key      = ""
+}
+{% endif %}
+{% endfor %}
+{% endfor %}
 
-{% for service in produces.keys() %}
+{% for service in services.keys() %}
 resource "rabbitmq_user" "{{ service }}" {
   name     = "{{ service }}"
   password = ""
 }
 {% endfor %}
 
-{% for service, exchanges in produces.items() %}
+{% for service, rmq_entities in services.items() %}
 resource "rabbitmq_permissions" "{{ service }}" {
   user  = rabbitmq_user.{{ service }}.name
   vhost = "/"
 
   permissions {
     configure = ""
-    write    = "({% for exchange in exchanges %}{{ exchange }}|{% endfor %})"
-    read     = ""
+    write    = "
+    {%- if rmq_entities.produces -%}
+        (
+        {%- for exchange in rmq_entities.produces -%}
+            {{ exchange }}
+            {%- if not loop.last -%}
+                |
+            {%- endif -%}
+        {%- endfor -%}
+        )
+    {%- endif -%}"
+    read     = "
+    {%- if rmq_entities.consumes -%}
+        (
+        {%- for queue in rmq_entities.consumes -%}
+            {%- if queue is mapping -%}
+                {%- for queue_group in queue.keys() -%}
+                    {{ service }}\.{{ queue_group }}|{{ service }}\.{{ queue_group }}\.backfill
+                    {%- if not loop.last %}
+                        |
+                    {%- endif -%}
+                {%- endfor -%}
+            {%- else -%}
+                {{ service }}\.{{ queue }}|{{ service }}\.{{ queue }}\.backfill
+            {%- endif -%}
+            {%- if not loop.last -%}
+                |
+            {%- endif -%}
+        {%- endfor -%}
+        )
+    {%- endif -%}"
   }
-}
-{% endfor %}
-
-{% for service in consumes.keys() %}
-resource "rabbitmq_user" "{{ service }}" {
-  name     = "{{ service }}"
-  password = ""
 }
 {% endfor %}

@@ -10,11 +10,23 @@
     }
   },
   "service3": {
+    "produces": {
+      "entity3.json": null
+    }
+  },
+  "service4": {
+    "produces": {
+      "entity4.json": null
+    }
+  },
+  "service5": {
     "consumes": {
       "queue_group": {
         "entity1.json": null,
         "entity2.json": null
-      }
+      },
+      "entity3.json": null,
+      "entity4.json": null
     }
   }
 }
