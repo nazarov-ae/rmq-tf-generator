@@ -71,3 +71,33 @@ resource "rabbitmq_binding" "service2_entity1" {
   destination_type = "queue"
   routing_key      = ""
 }
+
+resource "rabbitmq_user" "service1" {
+  name     = "service1"
+  password = ""
+}
+resource "rabbitmq_user" "service2" {
+  name     = "service2"
+  password = ""
+}
+
+resource "rabbitmq_permissions" "service1" {
+  user  = rabbitmq_user.service1.name
+  vhost = "/"
+
+  permissions {
+    configure = ""
+    write    = "(entity1)"
+    read     = "(service1\.entity2|service1\.entity2\.backfill)"
+  }
+}
+resource "rabbitmq_permissions" "service2" {
+  user  = rabbitmq_user.service2.name
+  vhost = "/"
+
+  permissions {
+    configure = ""
+    write    = "(entity2)"
+    read     = "(service2\.entity1|service2\.entity1\.backfill)"
+  }
+}

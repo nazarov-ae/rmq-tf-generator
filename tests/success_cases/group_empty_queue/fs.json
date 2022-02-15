@@ -12,8 +12,6 @@
   "service3": {
     "consumes": {
       "queue_group": {
-        "entity1.json": null,
-        "entity2.json": null
       }
     }
   }

@@ -28,9 +28,19 @@ resource "rabbitmq_exchange" "entity3" {
     auto_delete = false
   }
 }
+resource "rabbitmq_exchange" "entity4" {
+  name  = "entity4"
+  vhost = "/"
 
-resource "rabbitmq_queue" "service1_entity3" {
-  name  = "service1.entity3"
+  settings {
+    type        = "fanout"
+    durable     = true
+    auto_delete = false
+  }
+}
+
+resource "rabbitmq_queue" "service5_queue_group" {
+  name  = "service5.queue_group"
   vhost = "/"
 
   settings {
@@ -38,45 +48,8 @@ resource "rabbitmq_queue" "service1_entity3" {
     auto_delete = false
   }
 }
-resource "rabbitmq_queue" "service2_entity1" {
-  name  = "service2.entity1"
-  vhost = "/"
-
-  settings {
-    durable     = true
-    auto_delete = false
-  }
-}
-resource "rabbitmq_queue" "service3_entity2" {
-  name  = "service3.entity2"
-  vhost = "/"
-
-  settings {
-    durable     = true
-    auto_delete = false
-  }
-}
-
-resource "rabbitmq_queue" "service1_entity3_backfill" {
-  name  = "service1.entity3.backfill"
-  vhost = "/"
-
-  settings {
-    durable     = true
-    auto_delete = false
-  }
-}
-resource "rabbitmq_queue" "service2_entity1_backfill" {
-  name  = "service2.entity1.backfill"
-  vhost = "/"
-
-  settings {
-    durable     = true
-    auto_delete = false
-  }
-}
-resource "rabbitmq_queue" "service3_entity2_backfill" {
-  name  = "service3.entity2.backfill"
+resource "rabbitmq_queue" "service5_entity3" {
+  name  = "service5.entity3"
   vhost = "/"
 
   settings {
@@ -85,24 +58,43 @@ resource "rabbitmq_queue" "service3_entity2_backfill" {
   }
 }
 
-resource "rabbitmq_binding" "service1_entity3" {
-  source           = rabbitmq_exchange.entity3.name
-  vhost            = "/"
-  destination      = rabbitmq_queue.service1_entity3.name
-  destination_type = "queue"
-  routing_key      = ""
+resource "rabbitmq_queue" "service5_queue_group_backfill" {
+  name  = "service5.queue_group.backfill"
+  vhost = "/"
+
+  settings {
+    durable     = true
+    auto_delete = false
+  }
 }
-resource "rabbitmq_binding" "service2_entity1" {
+resource "rabbitmq_queue" "service5_entity3_backfill" {
+  name  = "service5.entity3.backfill"
+  vhost = "/"
+
+  settings {
+    durable     = true
+    auto_delete = false
+  }
+}
+
+resource "rabbitmq_binding" "service5_queue_group_entity1" {
   source           = rabbitmq_exchange.entity1.name
   vhost            = "/"
-  destination      = rabbitmq_queue.service2_entity1.name
+  destination      = rabbitmq_queue.service5_queue_group.name
   destination_type = "queue"
   routing_key      = ""
 }
-resource "rabbitmq_binding" "service3_entity2" {
+resource "rabbitmq_binding" "service5_queue_group_entity2" {
   source           = rabbitmq_exchange.entity2.name
   vhost            = "/"
-  destination      = rabbitmq_queue.service3_entity2.name
+  destination      = rabbitmq_queue.service5_queue_group.name
+  destination_type = "queue"
+  routing_key      = ""
+}
+resource "rabbitmq_binding" "service5_entity3" {
+  source           = rabbitmq_exchange.entity3.name
+  vhost            = "/"
+  destination      = rabbitmq_queue.service5_entity3.name
   destination_type = "queue"
   routing_key      = ""
 }
@@ -119,6 +111,14 @@ resource "rabbitmq_user" "service3" {
   name     = "service3"
   password = ""
 }
+resource "rabbitmq_user" "service4" {
+  name     = "service4"
+  password = ""
+}
+resource "rabbitmq_user" "service5" {
+  name     = "service5"
+  password = ""
+}
 
 resource "rabbitmq_permissions" "service1" {
   user  = rabbitmq_user.service1.name
@@ -127,7 +127,7 @@ resource "rabbitmq_permissions" "service1" {
   permissions {
     configure = ""
     write    = "(entity1)"
-    read     = "(service1\.entity3|service1\.entity3\.backfill)"
+    read     = ""
   }
 }
 resource "rabbitmq_permissions" "service2" {
@@ -137,7 +137,7 @@ resource "rabbitmq_permissions" "service2" {
   permissions {
     configure = ""
     write    = "(entity2)"
-    read     = "(service2\.entity1|service2\.entity1\.backfill)"
+    read     = ""
   }
 }
 resource "rabbitmq_permissions" "service3" {
@@ -147,6 +147,26 @@ resource "rabbitmq_permissions" "service3" {
   permissions {
     configure = ""
     write    = "(entity3)"
-    read     = "(service3\.entity2|service3\.entity2\.backfill)"
+    read     = ""
+  }
+}
+resource "rabbitmq_permissions" "service4" {
+  user  = rabbitmq_user.service4.name
+  vhost = "/"
+
+  permissions {
+    configure = ""
+    write    = "(entity4)"
+    read     = ""
+  }
+}
+resource "rabbitmq_permissions" "service5" {
+  user  = rabbitmq_user.service5.name
+  vhost = "/"
+
+  permissions {
+    configure = ""
+    write    = ""
+    read     = "(service5\.queue_group|service5\.queue_group\.backfill|service5\.entity3|service5\.entity3\.backfill)"
   }
 }

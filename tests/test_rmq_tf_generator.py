@@ -42,6 +42,9 @@ def create_fake_fs(file_struct):
 def get_success_cases_dirs():
     for case_dir in os.listdir(SUCCESS_CASES_DIR):
         yield case_dir
+    # yield 'two_to_one'
+    # yield 'group_queue'
+    # yield 'double_two'
 
 
 @pytest.mark.parametrize('case_dir', get_success_cases_dirs())
@@ -132,7 +135,7 @@ def test_multiple_producer_error(fs_plus, fs_struct, exception_match):  # noqa: 
                 },
             },
         },
-        ['entity1']
+        ['entity2']
     ),
     (
         {
@@ -156,5 +159,6 @@ def test_multiple_producer_error(fs_plus, fs_struct, exception_match):  # noqa: 
 def test_producer_missing_error(fs_struct, fs_plus, exception_match):  # noqa: redefined-outer-name
     create_fake_fs(fs_struct)
 
+    # TODO: match don't work?
     with pytest.raises(ProducerMissingError, match=str(exception_match)):
         ConfigBuilder(SERVICES_DIR).build()
