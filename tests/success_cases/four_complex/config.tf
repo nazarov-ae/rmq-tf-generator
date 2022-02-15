@@ -166,7 +166,7 @@ resource "rabbitmq_permissions" "service1" {
   permissions {
     configure = ""
     write    = "(entity1|entity2)"
-    read     = "(service1\.entity3|service1\.entity3\.backfill|service1\.entity4|service1\.entity4\.backfill)"
+    read     = "(service1\\.entity3|service1\\.entity3\\.backfill|service1\\.entity4|service1\\.entity4\\.backfill)"
   }
 }
 resource "rabbitmq_permissions" "service2" {
@@ -176,7 +176,7 @@ resource "rabbitmq_permissions" "service2" {
   permissions {
     configure = ""
     write    = "(entity3)"
-    read     = "(service2\.entity2|service2\.entity2\.backfill)"
+    read     = "(service2\\.entity2|service2\\.entity2\\.backfill)"
   }
 }
 resource "rabbitmq_permissions" "service3" {
@@ -196,6 +196,6 @@ resource "rabbitmq_permissions" "service4" {
   permissions {
     configure = ""
     write    = ""
-    read     = "(service4\.entity1|service4\.entity1\.backfill)"
+    read     = "(service4\\.entity1|service4\\.entity1\\.backfill)"
   }
 }

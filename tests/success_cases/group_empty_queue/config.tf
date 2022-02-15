@@ -80,6 +80,6 @@ resource "rabbitmq_permissions" "service3" {
   permissions {
     configure = ""
     write    = ""
-    read     = "(service3\.queue_group|service3\.queue_group\.backfill)"
+    read     = "(service3\\.queue_group|service3\\.queue_group\\.backfill)"
   }
 }
