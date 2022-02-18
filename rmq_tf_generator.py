@@ -1,4 +1,5 @@
 import os
+import json
 from os.path import (
     splitext, join, isdir, isfile, dirname, abspath, exists)
 import re
@@ -15,11 +16,19 @@ class ProducerMissingError(Exception):
     pass
 
 
+class ServiceAccountNotSetError(Exception):
+    pass
+
+
+class DuplicateServiceAccountError(Exception):
+    pass
+
+
 class ConfigBuilder:  # noqa: too-few-public-methods
     BASE_DIR = dirname(abspath(__file__))
     ENTITIES_TEMPLATE = r'.*\.json'
     RABBITMQ_TEMPLATE = 'rabbitmq.j2tf'
-    USERS_FILE = 'users.json'
+    INFO_FILE = 'service.json'
 
     def __init__(self, services_dir):
         self.services_dir = services_dir
@@ -64,24 +73,42 @@ class ConfigBuilder:  # noqa: too-few-public-methods
             if isfile(entity_fs):
                 self._collect_consumes_entity(service, entity)
 
-    def _collect_data(self):
+    def _collect_info(self, service, service_dir):
+        self.services[service]['info'] = {}
+        info_file = join(service_dir, self.INFO_FILE)
+        if not exists(info_file) or not isfile(info_file):
+            return
+        with open(info_file, 'r', encoding='utf-8') as file:
+            data = file.read()
+        if not data:
+            return
+        self.services[service]['info'] = json.loads(data)
+
+    def _collect_services(self):
         """
         Пример с обычными очередями.
-        service1
-        |- produces
-           |- entity1
-        service2
-        |- consumes
-           |- entity1
+        > service1
+          > produces
+            entity1.json
+          service.json
+        > service2
+          > consumes
+            entity1.json
+          service.json
 
         'services': {
             'service1': {
                 'produces': ['entity1'],
                 'consumes': []
-            },
+                'info': {
+                    'account': 'service1_account'
+                },
             'service2': {
                 'produces': [],
-                'consumes': ['entity1']
+                'consumes': ['entity1'],
+                'info': {
+                    'account': 'service2_account'
+                },
             }
         }
 
@@ -90,24 +117,29 @@ class ConfigBuilder:  # noqa: too-few-public-methods
         bindings:
             entity1:    service2.entity1
         users:
-            service1:
+            service1_account:
                 write:  entity1
-            service2:
+            service2_account:
                 read:   service2.entity1
 
         Пример с группой очередей.
-        service1
-        |- produces
-           |- entity1
-        service2
-        |- consumes
-           |- group
-              |- entity1
+        > service1
+          > produces
+            entity1.json
+          service.json
+        > service2
+          > consumes
+            > group
+              entity1.json
+          service.json
 
         'services': {
             'service1': {
                 'produces': ['entity1'],
                 'consumes': [],
+                'info': {
+                    'account': 'service1_account'
+                },
             },
             'service2': {
                 'produces': [],
@@ -116,6 +148,9 @@ class ConfigBuilder:  # noqa: too-few-public-methods
                         'group': ['entity1']
                     }
                 ]
+                'info': {
+                    'account': 'service2_account'
+                },
             }
         }
 
@@ -124,9 +159,9 @@ class ConfigBuilder:  # noqa: too-few-public-methods
         bindings:
             entity1:    service2.group
         users:
-            service1:
+            service1_account:
                 write:  entity1
-            service2:
+            service2_account:
                 read:   service2.group
         """
 
@@ -137,37 +172,42 @@ class ConfigBuilder:  # noqa: too-few-public-methods
             self.services[service] = {}
             self._collect_produces(service, service_dir)
             self._collect_consumes(service, service_dir)
+            self._collect_info(service, service_dir)
 
     def _validate_produces(self):
         self._valid_produces = []
-        error_produces = []
-        for rmq_entity in self.services.values():
-            for producer in rmq_entity['produces']:
+        for service_item in self.services.values():
+            for producer in service_item['produces']:
                 if producer in self._valid_produces:
-                    error_produces.append(producer)
-                    continue
+                    raise MultipleProducerError(producer)
                 self._valid_produces.append(producer)
-        if error_produces:
-            raise MultipleProducerError(error_produces)
 
     def _validate_consumes(self):
-        error_consumes = []
-        for rmq_entity in self.services.values():  # noqa: too-many-nested-blocks
-            for consumer in rmq_entity['consumes']:
+        for service_item in self.services.values():  # noqa: too-many-nested-blocks
+            for consumer in service_item['consumes']:
                 if isinstance(consumer, dict):
                     for sub_consumes in consumer.values():
-                        for sub_consume in sub_consumes:
-                            if sub_consume not in self._valid_produces:
-                                error_consumes.append(consumer)
+                        for sub_consumer in sub_consumes:
+                            if sub_consumer not in self._valid_produces:
+                                raise ProducerMissingError(sub_consumer)
                 if isinstance(consumer, str):
                     if consumer not in self._valid_produces:
-                        error_consumes.append(consumer)
-        if error_consumes:
-            raise ProducerMissingError(error_consumes)
+                        raise ProducerMissingError(consumer)
 
-    def _validate_data(self):
+    def _validate_info(self):
+        valid_account = []
+        for service, service_item in self.services.items():
+            if 'account' not in service_item['info']:
+                raise ServiceAccountNotSetError(service)
+            account = service_item['info']['account']
+            if account in valid_account:
+                raise DuplicateServiceAccountError(account)
+            valid_account.append(account)
+
+    def _validate_services(self):
         self._validate_produces()
         self._validate_consumes()
+        self._validate_info()
 
     # TODO:
     #  * remove empty new line from result tf-file
@@ -182,8 +222,8 @@ class ConfigBuilder:  # noqa: too-few-public-methods
         })
 
     def build(self):
-        self._collect_data()
-        self._validate_data()
+        self._collect_services()
+        self._validate_services()
         return self._render()
 
 

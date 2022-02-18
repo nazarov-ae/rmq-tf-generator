@@ -1,10 +1,12 @@
 {
   "service1": {
     "produces": {
-    }
+    },
+    "service.json": "{\"account\": \"service1\"}"
   },
   "service2": {
     "consumes": {
-    }
+    },
+    "service.json": "{\"account\": \"service2\"}"
   }
 }

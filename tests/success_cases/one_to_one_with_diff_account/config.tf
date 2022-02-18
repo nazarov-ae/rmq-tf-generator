@@ -37,17 +37,17 @@ resource "rabbitmq_binding" "service2_entity1" {
   routing_key      = ""
 }
 
-resource "rabbitmq_user" "service1" {
-  name     = "service1"
+resource "rabbitmq_user" "account1" {
+  name     = "account1"
   password = ""
 }
-resource "rabbitmq_user" "service2" {
-  name     = "service2"
+resource "rabbitmq_user" "account2" {
+  name     = "account2"
   password = ""
 }
 
-resource "rabbitmq_permissions" "service1" {
-  user  = rabbitmq_user.service1.name
+resource "rabbitmq_permissions" "account1" {
+  user  = rabbitmq_user.account1.name
   vhost = "/"
 
   permissions {
@@ -56,8 +56,8 @@ resource "rabbitmq_permissions" "service1" {
     read     = ""
   }
 }
-resource "rabbitmq_permissions" "service2" {
-  user  = rabbitmq_user.service2.name
+resource "rabbitmq_permissions" "account2" {
+  user  = rabbitmq_user.account2.name
   vhost = "/"
 
   permissions {

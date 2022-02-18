@@ -1,20 +1,23 @@
 {
   "service1": {
     "produces": {
-      "entity1.json": null
-    }
+      "entity1.json": ""
+    },
+    "service.json": "{\"account\": \"service1\"}"
   },
   "service2": {
     "produces": {
-      "entity2.json": null
-    }
+      "entity2.json": ""
+    },
+    "service.json": "{\"account\": \"service2\"}"
   },
   "service3": {
     "consumes": {
       "queue_group1": {
-        "entity1.json": null
+        "entity1.json": ""
       },
-      "entity1.json": null
-    }
+      "entity1.json": ""
+    },
+    "service.json": "{\"account\": \"service3\"}"
   }
 }

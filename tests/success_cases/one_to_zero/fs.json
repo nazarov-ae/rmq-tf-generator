@@ -1,7 +1,8 @@
 {
   "service1": {
     "produces": {
-      "entity1.json": null
-    }
+      "entity1.json": ""
+    },
+    "service.json": "{\"account\": \"service1\"}"
   }
 }
