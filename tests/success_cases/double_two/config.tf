@@ -1,4 +1,4 @@
-resource "rabbitmq_exchange" "entity1" {
+1resource "rabbitmq_exchange" "entity1" {
   name  = "entity1"
   vhost = "/"
 

@@ -169,7 +169,8 @@ class ConfigBuilder:  # noqa: too-few-public-methods
         self._validate_produces()
         self._validate_consumes()
 
-    # TODO: remove empty new line from result tf-file
+    # TODO:
+    #  * remove empty new line from result tf-file
     def _render(self):
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(self.BASE_DIR),
