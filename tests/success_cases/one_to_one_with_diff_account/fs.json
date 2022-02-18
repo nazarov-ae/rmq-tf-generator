@@ -3,12 +3,12 @@
     "produces": {
       "entity1.json": ""
     },
-    "service.json": "{\"account\": \"service1\"}"
+    "service.json": "{\"account\": \"account1\"}"
   },
   "service2": {
     "consumes": {
       "entity1.json": ""
     },
-    "service.json": "{\"account\": \"service2\"}"
+    "service.json": "{\"account\": \"account2\"}"
   }
 }

@@ -13,8 +13,8 @@ resource "rabbitmq_exchange" "{{ exchange }}" {
 {% endfor %}
 {% endfor %}
 
-{% for service, rmq_entities in services.items() %}
-{% for queue in rmq_entities.consumes %}
+{% for service, service_item in services.items() %}
+{% for queue in service_item.consumes %}
 {% if queue is mapping %}
 {% for queue_group in queue.keys() %}
 resource "rabbitmq_queue" "{{ service }}_{{ queue_group }}" {
@@ -41,8 +41,8 @@ resource "rabbitmq_queue" "{{ service }}_{{ queue }}" {
 {% endfor %}
 {% endfor %}
 
-{% for service, rmq_entities in services.items() %}
-{% for queue in rmq_entities.consumes %}
+{% for service, service_item in services.items() %}
+{% for queue in service_item.consumes %}
 {% if queue is mapping %}
 {% for queue_group in queue.keys() %}
 resource "rabbitmq_queue" "{{ service }}_{{ queue_group }}_backfill" {
@@ -69,8 +69,8 @@ resource "rabbitmq_queue" "{{ service }}_{{ queue }}_backfill" {
 {% endfor %}
 {% endfor %}
 
-{% for service, rmq_entities in services.items() %}
-{% for queue in rmq_entities.consumes %}
+{% for service, service_item in services.items() %}
+{% for queue in service_item.consumes %}
 {% if queue is mapping %}
 {% for queue_group, queues in queue.items() %}
 {% for queue in queues %}
@@ -95,24 +95,24 @@ resource "rabbitmq_binding" "{{ service }}_{{ queue }}" {
 {% endfor %}
 {% endfor %}
 
-{% for service in services.keys() %}
-resource "rabbitmq_user" "{{ service }}" {
-  name     = "{{ service }}"
+{% for service, service_item in services.items() %}
+resource "rabbitmq_user" "{{ service_item.info.account }}" {
+  name     = "{{ service_item.info.account }}"
   password = ""
 }
 {% endfor %}
 
-{% for service, rmq_entities in services.items() %}
-resource "rabbitmq_permissions" "{{ service }}" {
-  user  = rabbitmq_user.{{ service }}.name
+{% for service, service_item in services.items() %}
+resource "rabbitmq_permissions" "{{ service_item.info.account }}" {
+  user  = rabbitmq_user.{{ service_item.info.account }}.name
   vhost = "/"
 
   permissions {
     configure = ""
     write    = "
-    {%- if rmq_entities.produces -%}
+    {%- if service_item.produces -%}
         (
-        {%- for exchange in rmq_entities.produces -%}
+        {%- for exchange in service_item.produces -%}
             {{ exchange }}
             {%- if not loop.last -%}
                 |
@@ -121,9 +121,9 @@ resource "rabbitmq_permissions" "{{ service }}" {
         )
     {%- endif -%}"
     read     = "
-    {%- if rmq_entities.consumes -%}
+    {%- if service_item.consumes -%}
         (
-        {%- for queue in rmq_entities.consumes -%}
+        {%- for queue in service_item.consumes -%}
             {%- if queue is mapping -%}
                 {%- for queue_group in queue.keys() -%}
                     {{ service }}\\.{{ queue_group }}|{{ service }}\\.{{ queue_group }}\\.backfill
