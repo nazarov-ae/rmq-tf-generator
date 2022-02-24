@@ -1,9 +1,14 @@
+from os import path
 import setuptools
+import codecs
+
+
+BASE_DIR = path.abspath(path.dirname(__file__))
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with codecs.open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
+with codecs.open(path.join(BASE_DIR, 'requirements.txt'), encoding='utf-8') as f:
     requirements = [
         line for line in f.readlines()
         if line and not line.startswith('#')
